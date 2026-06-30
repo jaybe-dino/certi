@@ -1,7 +1,7 @@
 """Facility schemas (spec FR-04)."""
 
 import uuid
-from datetime import datetime
+from datetime import date, datetime
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
@@ -54,3 +54,9 @@ class SubmissionRead(BaseModel):
 class GenerateSplResponse(BaseModel):
     submission: SubmissionRead
     facility: FacilityRead
+
+
+class MarkRegisteredResponse(BaseModel):
+    facility: FacilityRead
+    renewal_task_id: uuid.UUID
+    renewal_due_date: date

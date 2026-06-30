@@ -52,13 +52,29 @@ alembic upgrade head
 uvicorn app.main:app --reload
 ```
 
-## 헬스 체크
+## 주요 API
 
-| 엔드포인트 | 용도 |
-|-----------|------|
-| `GET /` | 서비스 정보 |
-| `GET /api/v1/health` | Liveness (의존성 미접속) |
-| `GET /api/v1/health/ready` | Readiness (DB 연결 확인) |
+전체 명세는 서버 실행 후 `http://localhost:8000/docs` (Swagger UI) 참고.
+
+| 영역 | 엔드포인트 | FR |
+|------|-----------|-----|
+| 헬스 | `GET /`, `GET /api/v1/health`, `GET /api/v1/health/ready` | - |
+| 인증 | `POST /api/v1/auth/register`·`/login`·`/refresh`, `GET /me` | FR-02 |
+| 2FA | `POST /api/v1/auth/2fa/enroll`·`/verify`·`/disable` | FR-02 |
+| 무료 진단 | `POST /api/v1/diagnostics` *(공개)* | FR-01 |
+| 워크스페이스 | `POST·GET /api/v1/workspaces` | FR-14 |
+| 시설 등록 | `POST·GET /workspaces/{id}/facilities`, `GET·PATCH /facilities/{id}` | FR-04 |
+| SPL/제출 | `GET /facilities/{id}/validate`, `POST /facilities/{id}/generate-spl`, `POST /facilities/{id}/mark-registered` | FR-04 |
+| 컴플라이언스 | `POST·GET /workspaces/{id}/compliance-tasks`, `PATCH /compliance-tasks/{id}` | FR-09 |
+
+### 도메인 엔진
+
+- **무료 진단 엔진** (`services/diagnostic_service.py`) — 소규모 면제(매출 < $1M)·
+  면제 제외 카테고리 판정 + 의무 체크리스트 (FR-01)
+- **검증기** (`services/validation_service.py`) — 필수값·영문·FEI 형식 (§7.3)
+- **SPL 생성기** (`services/spl_service.py`) — HL7 v3 Form 5066 (§2.2, §6.1)
+- **마감 엔진** (`services/deadline_engine.py`) — 시설 +2년, 리스팅/변경 +120일,
+  SAE +15영업일(주말·공휴일 제외), 상태 자동 산출 (§7.1)
 
 ## 데이터 모델 (기획서 §5)
 

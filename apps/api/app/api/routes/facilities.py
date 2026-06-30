@@ -13,6 +13,7 @@ from app.schemas.facility import (
     FacilityRead,
     FacilityUpdate,
     GenerateSplResponse,
+    MarkRegisteredResponse,
     SubmissionRead,
     ValidationResult,
 )
@@ -129,4 +130,23 @@ async def generate_spl(
     return GenerateSplResponse(
         submission=SubmissionRead.model_validate(submission),
         facility=FacilityRead.model_validate(facility),
+    )
+
+
+@router.post(
+    "/facilities/{facility_id}/mark-registered",
+    response_model=MarkRegisteredResponse,
+    summary="시설 등록 완료 처리 (+2년 갱신 태스크 자동 생성, §7.1)",
+)
+async def mark_registered(
+    facility_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    facility = await _require_facility(db, facility_id, current_user)
+    facility, renewal = await facility_service.mark_registered(db, facility)
+    return MarkRegisteredResponse(
+        facility=FacilityRead.model_validate(facility),
+        renewal_task_id=renewal.id,
+        renewal_due_date=renewal.due_date,
     )

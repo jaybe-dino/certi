@@ -1,15 +1,22 @@
 """Facility persistence + SPL submission orchestration (spec FR-04)."""
 
 import uuid
+from datetime import date
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.enums import FacilityStatus, SubmissionStatus, SubmissionType
+from app.models.compliance import ComplianceTask
+from app.models.enums import (
+    ComplianceTaskType,
+    FacilityStatus,
+    SubmissionStatus,
+    SubmissionType,
+)
 from app.models.facility import Facility
 from app.models.organization import Workspace
 from app.models.submission import Submission
-from app.services import spl_service, validation_service
+from app.services import deadline_engine, spl_service, validation_service
 
 
 async def create(
@@ -84,3 +91,26 @@ async def generate_spl_submission(
     await db.refresh(submission)
     await db.refresh(facility)
     return submission, []
+
+
+async def mark_registered(
+    db: AsyncSession, facility: Facility
+) -> tuple[Facility, ComplianceTask]:
+    """Mark a facility registered and auto-create its +2y renewal task (§7.1)."""
+    facility.status = FacilityStatus.registered
+    today = date.today()
+    renewal_due = deadline_engine.compute_due_date(
+        ComplianceTaskType.facility_renewal, today
+    )
+    renewal = ComplianceTask(
+        workspace_id=facility.workspace_id,
+        type=ComplianceTaskType.facility_renewal,
+        due_date=renewal_due,
+        source_ref=f"facility:{facility.id}",
+        status=deadline_engine.compute_status(renewal_due, today),
+    )
+    db.add(renewal)
+    await db.commit()
+    await db.refresh(facility)
+    await db.refresh(renewal)
+    return facility, renewal
