@@ -1,19 +1,13 @@
-"""Smoke tests for the root and liveness endpoints (no DB required)."""
-
-from fastapi.testclient import TestClient
-
-from app.main import app
-
-client = TestClient(app)
+"""Smoke tests for the root and liveness endpoints."""
 
 
-def test_root():
+def test_root(client):
     resp = client.get("/")
     assert resp.status_code == 200
     assert resp.json()["service"]
 
 
-def test_health_liveness():
+def test_health_liveness(client):
     resp = client.get("/api/v1/health")
     assert resp.status_code == 200
     assert resp.json()["status"] == "ok"

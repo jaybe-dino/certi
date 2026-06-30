@@ -52,6 +52,8 @@ class User(Base, UUIDMixin, TimestampMixin):
         Enum(UserRole, name="user_role"), default=UserRole.member, nullable=False
     )
     mfa_enabled: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    # Base32 TOTP secret; set when a user begins 2FA enrollment, cleared on disable.
+    totp_secret: Mapped[str | None] = mapped_column(String(64))
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
 
     organization: Mapped["Organization"] = relationship(back_populates="users")
