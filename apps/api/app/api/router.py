@@ -2,10 +2,11 @@
 
 from fastapi import APIRouter
 
-from app.api.routes import auth, health
+from app.api.routes import auth, diagnostics, health
 
 api_router = APIRouter()
 api_router.include_router(health.router)
 api_router.include_router(auth.router)
+api_router.include_router(diagnostics.router)
 
-# Future feature routers (diagnostics, facilities, products, ...) mount here.
+# Future feature routers (facilities, products, ...) mount here.
