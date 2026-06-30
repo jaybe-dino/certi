@@ -1,9 +1,10 @@
 """Application settings loaded from environment / .env file."""
 
 from functools import lru_cache
+from typing import Annotated
 
-from pydantic import Field, PostgresDsn, computed_field
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import Field, PostgresDsn, computed_field, field_validator
+from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 
 class Settings(BaseSettings):
@@ -38,7 +39,24 @@ class Settings(BaseSettings):
     algorithm: str = "HS256"
 
     # ── CORS ─────────────────────────────────────────────────
-    backend_cors_origins: list[str] = Field(default_factory=lambda: ["http://localhost:3000"])
+    # Accepts a JSON array OR a comma-separated string (handy on PaaS dashboards):
+    #   BACKEND_CORS_ORIGINS=https://app.vercel.app,https://www.example.com
+    backend_cors_origins: Annotated[list[str], NoDecode] = Field(
+        default_factory=lambda: ["http://localhost:3000"]
+    )
+
+    @field_validator("backend_cors_origins", mode="before")
+    @classmethod
+    def _split_cors(cls, v: object) -> object:
+        # NoDecode keeps the raw env string here; accept JSON array or CSV.
+        if isinstance(v, str):
+            s = v.strip()
+            if s.startswith("["):
+                import json
+
+                return json.loads(s)
+            return [o.strip() for o in s.split(",") if o.strip()]
+        return v
 
     # ── FDA ESG NextGen API ──────────────────────────────────
     esg_base_url: str | None = None
@@ -48,9 +66,15 @@ class Settings(BaseSettings):
     @computed_field  # type: ignore[prop-decorator]
     @property
     def sqlalchemy_database_uri(self) -> str:
-        """Async SQLAlchemy URL — explicit DATABASE_URL wins, else built from parts."""
+        """Async SQLAlchemy URL — explicit DATABASE_URL wins, else built from parts.
+
+        Normalizes the scheme to ``postgresql+asyncpg`` so a platform-provided
+        ``postgresql://`` / ``postgres://`` URL (e.g. Railway, Render, Heroku)
+        works without manual editing, and strips the psycopg-style ``sslmode``
+        query param which asyncpg does not understand.
+        """
         if self.database_url:
-            return self.database_url
+            return _normalize_async_dsn(self.database_url)
         return str(
             PostgresDsn.build(
                 scheme="postgresql+asyncpg",
@@ -61,6 +85,24 @@ class Settings(BaseSettings):
                 path=self.postgres_db,
             )
         )
+
+
+def _normalize_async_dsn(url: str) -> str:
+    """Coerce a Postgres URL to the asyncpg driver and drop sslmode."""
+    from urllib.parse import urlsplit, urlunsplit
+
+    parts = urlsplit(url)
+    scheme = parts.scheme
+    if scheme in ("postgres", "postgresql"):
+        scheme = "postgresql+asyncpg"
+    elif scheme.startswith("postgres") and "+psycopg" in scheme:
+        scheme = "postgresql+asyncpg"
+
+    # Remove sslmode=... (psycopg-only); keep any other query params.
+    query = "&".join(
+        kv for kv in parts.query.split("&") if kv and not kv.startswith("sslmode=")
+    )
+    return urlunsplit((scheme, parts.netloc, parts.path, query, parts.fragment))
 
 
 @lru_cache

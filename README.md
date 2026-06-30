@@ -91,6 +91,16 @@ uvicorn app.main:app --reload
 ✅ 완료: FR-01·02·03·04·05·06·07·09·10·11·12·17
 ⏳ 보류(외부 연동 필요): FR-08 ESG 제출, FR-13 결제 PG, FR-15 알림(문자/메일), FR-16 운영자 콘솔
 
+## 배포 (Vercel + Railway)
+
+프론트엔드는 **Vercel**, 백엔드+PostgreSQL은 **Railway**에 배포합니다.
+단계별 가이드는 [`DEPLOYMENT.md`](./DEPLOYMENT.md) 참고.
+
+- 백엔드: `apps/api/Dockerfile` + `railway.json` (배포 시 마이그레이션 자동 적용)
+- 프론트: Vercel Root Directory `apps/web`, env `NEXT_PUBLIC_API_BASE_URL`
+- `DATABASE_URL`은 `postgresql://`/`postgres://`여도 asyncpg로 자동 정규화
+- CORS는 `BACKEND_CORS_ORIGINS`에 콤마구분 또는 JSON 배열로 지정
+
 ## 데이터 모델 (기획서 §5)
 
 14개 테이블이 구현되어 있다: `organization`, `workspace`, `user`,
