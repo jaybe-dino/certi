@@ -9,6 +9,7 @@ from app.api.routes import (
     facilities,
     health,
     onboarding,
+    products,
     workspaces,
 )
 
@@ -19,6 +20,5 @@ api_router.include_router(diagnostics.router)
 api_router.include_router(workspaces.router)
 api_router.include_router(onboarding.router)
 api_router.include_router(facilities.router)
+api_router.include_router(products.router)
 api_router.include_router(compliance.router)
-
-# Future feature routers (products, ...) mount here.

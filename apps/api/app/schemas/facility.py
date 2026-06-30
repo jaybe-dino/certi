@@ -53,7 +53,8 @@ class SubmissionRead(BaseModel):
 
 class GenerateSplResponse(BaseModel):
     submission: SubmissionRead
-    facility: FacilityRead
+    # Present for facility (5066) submissions; null for product (5067) listings.
+    facility: FacilityRead | None = None
 
 
 class MarkRegisteredResponse(BaseModel):
