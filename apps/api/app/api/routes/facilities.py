@@ -17,7 +17,7 @@ from app.schemas.facility import (
     SubmissionRead,
     ValidationResult,
 )
-from app.services import facility_service, workspace_service
+from app.services import audit_service, facility_service, workspace_service
 
 router = APIRouter(tags=["facilities"])
 
@@ -127,6 +127,14 @@ async def generate_spl(
             status_code=422,  # Unprocessable Content
             detail={"message": "Validation failed", "errors": errors},
         )
+    await audit_service.record(
+        db,
+        actor_id=current_user.id,
+        workspace_id=facility.workspace_id,
+        action="facility.generate_spl",
+        target=f"submission:{submission.id}",
+        payload={"facility_id": str(facility.id), "type": "5066"},
+    )
     return GenerateSplResponse(
         submission=SubmissionRead.model_validate(submission),
         facility=FacilityRead.model_validate(facility),
@@ -145,6 +153,14 @@ async def mark_registered(
 ):
     facility = await _require_facility(db, facility_id, current_user)
     facility, renewal = await facility_service.mark_registered(db, facility)
+    await audit_service.record(
+        db,
+        actor_id=current_user.id,
+        workspace_id=facility.workspace_id,
+        action="facility.registered",
+        target=f"facility:{facility.id}",
+        payload={"renewal_task_id": str(renewal.id)},
+    )
     return MarkRegisteredResponse(
         facility=FacilityRead.model_validate(facility),
         renewal_task_id=renewal.id,

@@ -23,7 +23,7 @@ from app.schemas.product import (
     ProductRead,
     ProductUpdate,
 )
-from app.services import product_service
+from app.services import audit_service, product_service
 
 router = APIRouter(tags=["products"])
 
@@ -195,6 +195,14 @@ async def generate_product_spl(
             status_code=422,
             detail={"message": "Validation failed", "errors": errors},
         )
+    await audit_service.record(
+        db,
+        actor_id=current_user.id,
+        workspace_id=product.workspace_id,
+        action="product.generate_spl",
+        target=f"submission:{submission.id}",
+        payload={"product_id": str(product.id), "type": "5067"},
+    )
     return GenerateSplResponse(
         submission=SubmissionRead.model_validate(submission),
         facility=None,  # not applicable for product listing

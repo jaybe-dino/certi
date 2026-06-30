@@ -63,18 +63,33 @@ uvicorn app.main:app --reload
 | 2FA | `POST /api/v1/auth/2fa/enroll`·`/verify`·`/disable` | FR-02 |
 | 무료 진단 | `POST /api/v1/diagnostics` *(공개)* | FR-01 |
 | 워크스페이스 | `POST·GET /api/v1/workspaces` | FR-14 |
+| 온보딩 | `POST·GET /workspaces/{id}/responsible-persons`·`/us-agents`, `PATCH …` | FR-03, FR-12 |
 | 시설 등록 | `POST·GET /workspaces/{id}/facilities`, `GET·PATCH /facilities/{id}` | FR-04 |
-| SPL/제출 | `GET /facilities/{id}/validate`, `POST /facilities/{id}/generate-spl`, `POST /facilities/{id}/mark-registered` | FR-04 |
+| 시설 SPL | `GET /facilities/{id}/validate`, `POST /facilities/{id}/generate-spl`·`/mark-registered` | FR-04 |
+| 제품 등록 | `POST·GET /workspaces/{id}/products`, `POST /workspaces/{id}/products/bulk` (CSV) | FR-05, FR-06 |
+| INCI/성분 | `POST·GET /products/{id}/ingredients`(+`/bulk`), `PATCH /ingredients/{id}` | FR-07 |
+| 제품 SPL | `POST /products/{id}/facilities`, `POST /products/{id}/generate-spl` | FR-05 |
+| 유해사례 | `POST /adverse-events`, `GET /products/{id}/adverse-events`, `GET …/severity-guide` | FR-10 |
 | 컴플라이언스 | `POST·GET /workspaces/{id}/compliance-tasks`, `PATCH /compliance-tasks/{id}` | FR-09 |
+| 문서 보관함 | `POST·GET /workspaces/{id}/documents` | FR-11 |
+| 감사 로그 | `GET /workspaces/{id}/audit-logs` | FR-17 |
 
 ### 도메인 엔진
 
 - **무료 진단 엔진** (`services/diagnostic_service.py`) — 소규모 면제(매출 < $1M)·
   면제 제외 카테고리 판정 + 의무 체크리스트 (FR-01)
+- **INCI 매핑 엔진** (`services/inci_service.py`) — 정규화 일치/유사/미발견 →
+  신뢰도(high/medium/low) + 검수 플래그 (FR-07, §7.2)
 - **검증기** (`services/validation_service.py`) — 필수값·영문·FEI 형식 (§7.3)
-- **SPL 생성기** (`services/spl_service.py`) — HL7 v3 Form 5066 (§2.2, §6.1)
+- **SPL 생성기** (`services/spl_service.py`) — HL7 v3 Form 5066/5067 (§2.2, §6.1)
 - **마감 엔진** (`services/deadline_engine.py`) — 시설 +2년, 리스팅/변경 +120일,
   SAE +15영업일(주말·공휴일 제외), 상태 자동 산출 (§7.1)
+- **감사 로그** (`services/audit_service.py`) — append-only, 주요 제출·등록 액션 기록 (§9)
+
+### 구현 현황 (FR)
+
+✅ 완료: FR-01·02·03·04·05·06·07·09·10·11·12·17
+⏳ 보류(외부 연동 필요): FR-08 ESG 제출, FR-13 결제 PG, FR-15 알림(문자/메일), FR-16 운영자 콘솔
 
 ## 데이터 모델 (기획서 §5)
 
