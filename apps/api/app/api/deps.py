@@ -12,8 +12,8 @@ from app.core.config import settings
 from app.core.database import get_db
 from app.core.security import ACCESS_TOKEN, decode_token
 from app.models.enums import UserRole
-from app.models.organization import User
-from app.services import user_service
+from app.models.organization import User, Workspace
+from app.services import user_service, workspace_service
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.api_v1_prefix}/auth/login")
 
@@ -44,6 +44,20 @@ async def get_current_user(
     if user is None or not user.is_active:
         raise _CREDENTIALS_ERROR
     return user
+
+
+async def get_path_workspace(
+    workspace_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> Workspace:
+    """Resolve a path ``workspace_id`` and enforce tenant ownership."""
+    ws = await workspace_service.get_owned(db, workspace_id, current_user.org_id)
+    if ws is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Workspace not found"
+        )
+    return ws
 
 
 def require_roles(

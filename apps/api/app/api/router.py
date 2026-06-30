@@ -8,6 +8,7 @@ from app.api.routes import (
     diagnostics,
     facilities,
     health,
+    onboarding,
     workspaces,
 )
 
@@ -16,6 +17,7 @@ api_router.include_router(health.router)
 api_router.include_router(auth.router)
 api_router.include_router(diagnostics.router)
 api_router.include_router(workspaces.router)
+api_router.include_router(onboarding.router)
 api_router.include_router(facilities.router)
 api_router.include_router(compliance.router)
 
