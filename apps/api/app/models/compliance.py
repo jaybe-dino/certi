@@ -3,7 +3,7 @@
 import uuid
 from datetime import date, datetime
 
-from sqlalchemy import Date, DateTime, Enum, ForeignKey
+from sqlalchemy import Date, DateTime, Enum, ForeignKey, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -44,6 +44,7 @@ class AdverseEvent(Base, UUIDMixin, TimestampMixin):
     product_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("product.id", ondelete="CASCADE"), nullable=False
     )
+    description: Mapped[str | None] = mapped_column(Text)
     severity: Mapped[AdverseEventSeverity] = mapped_column(
         Enum(AdverseEventSeverity, name="adverse_event_severity"), nullable=False
     )

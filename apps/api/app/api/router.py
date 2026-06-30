@@ -3,6 +3,7 @@
 from fastapi import APIRouter
 
 from app.api.routes import (
+    adverse_events,
     auth,
     compliance,
     diagnostics,
@@ -21,4 +22,5 @@ api_router.include_router(workspaces.router)
 api_router.include_router(onboarding.router)
 api_router.include_router(facilities.router)
 api_router.include_router(products.router)
+api_router.include_router(adverse_events.router)
 api_router.include_router(compliance.router)
