@@ -45,6 +45,10 @@ class Settings(BaseSettings):
         default_factory=lambda: ["http://localhost:3000"]
     )
 
+    # Regex for allowed origins (in addition to the explicit list). Defaults to
+    # any Vercel domain so preview + production frontends work out of the box.
+    backend_cors_origin_regex: str = r"https://.*\.vercel\.app"
+
     @field_validator("backend_cors_origins", mode="before")
     @classmethod
     def _split_cors(cls, v: object) -> object:
