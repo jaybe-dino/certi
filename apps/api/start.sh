@@ -20,4 +20,6 @@ done
 echo "Migrations applied."
 
 echo "Starting uvicorn on port ${PORT:-8000}..."
-exec uvicorn app.main:app --host 0.0.0.0 --port "${PORT:-8000}"
+# Bind to IPv6 (dual-stack) so Railway's private/edge network (IPv6) can reach
+# the app. A dual-stack :: socket also accepts IPv4 (e.g. localhost healthcheck).
+exec uvicorn app.main:app --host :: --port "${PORT:-8000}"
