@@ -31,6 +31,12 @@ export default function Nav() {
           <Link href="/dashboard" className="text-slate-600 hover:text-brand-600">
             대시보드
           </Link>
+          <Link href="/facilities" className="text-slate-600 hover:text-brand-600">
+            시설
+          </Link>
+          <Link href="/products" className="text-slate-600 hover:text-brand-600">
+            제품
+          </Link>
           <button
             onClick={logout}
             className="rounded-md border border-slate-300 px-3 py-1.5 text-slate-600 hover:bg-slate-100"

@@ -167,15 +167,25 @@ export default function DashboardPage() {
         <>
           <section className="grid gap-4 sm:grid-cols-3">
             {[
-              ["시설", counts.facilities],
-              ["제품", counts.products],
-              ["임박/초과 마감", tasks.filter((t) => ["due_soon", "overdue"].includes(t.status)).length],
-            ].map(([label, value]) => (
-              <div key={label as string} className="rounded-xl border border-slate-200 bg-white p-5">
-                <p className="text-sm text-slate-500">{label}</p>
-                <p className="mt-1 text-3xl font-bold text-slate-900">{value}</p>
-              </div>
-            ))}
+              ["시설", counts.facilities, "/facilities"],
+              ["제품", counts.products, "/products"],
+              ["임박/초과 마감", tasks.filter((t) => ["due_soon", "overdue"].includes(t.status)).length, null],
+            ].map(([label, value, href]) => {
+              const card = (
+                <div className="h-full rounded-xl border border-slate-200 bg-white p-5 hover:border-brand-300">
+                  <p className="text-sm text-slate-500">{label as string}</p>
+                  <p className="mt-1 text-3xl font-bold text-slate-900">{value as number}</p>
+                  {href && <p className="mt-1 text-xs text-brand-600">관리하기 →</p>}
+                </div>
+              );
+              return href ? (
+                <a key={label as string} href={href as string}>
+                  {card}
+                </a>
+              ) : (
+                <div key={label as string}>{card}</div>
+              );
+            })}
           </section>
 
           <section className="rounded-xl border border-slate-200 bg-white p-5">
