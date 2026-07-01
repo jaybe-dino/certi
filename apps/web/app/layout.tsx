@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import Nav from "@/components/Nav";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -19,20 +20,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               </span>
               Certi
             </Link>
-            <nav className="flex items-center gap-4 text-sm">
-              <Link href="/diagnostics" className="text-slate-600 hover:text-brand-600">
-                무료 진단
-              </Link>
-              <Link href="/dashboard" className="text-slate-600 hover:text-brand-600">
-                대시보드
-              </Link>
-              <Link
-                href="/login"
-                className="rounded-md bg-brand-600 px-3 py-1.5 text-white hover:bg-brand-700"
-              >
-                로그인
-              </Link>
-            </nav>
+            <Nav />
           </div>
         </header>
         <main className="mx-auto max-w-6xl px-4 py-8">{children}</main>
