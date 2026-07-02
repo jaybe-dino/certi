@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { api, ApiError } from "@/lib/api";
+import { api, ApiError, API_BASE } from "@/lib/api";
 import { useAuthToken, useWorkspaces } from "@/lib/hooks";
 import WorkspacePicker from "@/components/WorkspacePicker";
 
@@ -86,6 +86,29 @@ export default function ProductsPage() {
     });
     setRawNames("");
     await loadIngredients(selected.id);
+  }
+
+  async function uploadXlsx(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // allow re-selecting the same file
+    if (!token || !selected || !file) return;
+    setMsg(null);
+    const form = new FormData();
+    form.append("file", file);
+    try {
+      const res = await fetch(
+        `${API_BASE}/api/v1/products/${selected.id}/ingredients/upload`,
+        { method: "POST", headers: { Authorization: `Bearer ${token}` }, body: form }
+      );
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        throw new Error(body?.detail ?? "업로드 실패");
+      }
+      setMsg("✅ 전성분 엑셀 업로드 → INCI 매핑 완료");
+      await loadIngredients(selected.id);
+    } catch (err) {
+      setMsg("⚠️ " + (err instanceof Error ? err.message : "업로드 실패"));
+    }
   }
 
   async function resolveFlag(ing: Ingredient) {
@@ -250,6 +273,17 @@ export default function ProductsPage() {
                       매핑
                     </button>
                   </div>
+                  <label className="mt-2 inline-flex cursor-pointer items-center gap-2 text-xs text-brand-700">
+                    <span className="rounded-lg border border-brand-300 bg-brand-50 px-3 py-1.5 hover:bg-brand-100">
+                      전성분 엑셀(.xlsx) 업로드 → 자동 매핑
+                    </span>
+                    <input
+                      type="file"
+                      accept=".xlsx,.xlsm"
+                      onChange={uploadXlsx}
+                      className="hidden"
+                    />
+                  </label>
                 </div>
 
                 {/* Facility link */}

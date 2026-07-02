@@ -1,7 +1,9 @@
 """Product persistence: listing, ingredients (INCI), linking, SPL (FR-05/06/07)."""
 
+import io
 import uuid
 
+from openpyxl import load_workbook
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -97,6 +99,36 @@ async def add_ingredients_bulk(
     for ing in created:
         await db.refresh(ing)
     return created
+
+
+def parse_ingredient_xlsx(content: bytes) -> list[str]:
+    """Extract raw ingredient names from an .xlsx (전성분 영문 엑셀).
+
+    Picks the column whose header looks like an ingredient/INCI column;
+    falls back to the first column. Header row is skipped; blanks dropped.
+    """
+    wb = load_workbook(io.BytesIO(content), read_only=True, data_only=True)
+    ws = wb.active
+    rows = ws.iter_rows(values_only=True)
+
+    header = next(rows, None)
+    if header is None:
+        return []
+
+    col = 0
+    keywords = ("ingredient", "inci", "성분", "raw", "name")
+    for idx, cell in enumerate(header):
+        if cell and any(k in str(cell).strip().lower() for k in keywords):
+            col = idx
+            break
+
+    names: list[str] = []
+    for row in rows:
+        if col < len(row) and row[col] is not None:
+            value = str(row[col]).strip()
+            if value:
+                names.append(value)
+    return names
 
 
 async def list_ingredients(db: AsyncSession, product_id: uuid.UUID) -> list[Ingredient]:

@@ -86,3 +86,9 @@ class DocumentType(StrEnum):
     spl = "spl"
     summary = "summary"
     other = "other"
+    # Agent-mediated intake documents (spec docs/AGENT_MODEL.md)
+    biz_registration = "biz_registration"  # 영문 사업자등록증
+    factory_registration = "factory_registration"  # 영문 공장등록증
+    business_card = "business_card"  # 대표/담당자 명함
+    product_brief = "product_brief"  # 제품소개서
+    ingredient_sheet = "ingredient_sheet"  # 전성분 자료(영문 엑셀)

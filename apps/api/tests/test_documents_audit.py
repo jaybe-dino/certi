@@ -78,6 +78,30 @@ def test_audit_log_records_document_create(client, auth_headers, workspace_id):
     assert logs.json()[0]["action"] == "document.create"
 
 
+def test_intake_checklist(client, auth_headers, workspace_id):
+    # Initially incomplete: no company docs uploaded.
+    cl = client.get(
+        f"/api/v1/workspaces/{workspace_id}/intake-checklist", headers=auth_headers
+    ).json()
+    assert cl["complete"] is False
+    types = {i["type"]: i for i in cl["items"]}
+    assert types["biz_registration"]["uploaded"] is False
+
+    # Upload the three required company documents.
+    for doc_type in ("biz_registration", "factory_registration", "business_card"):
+        client.post(
+            f"/api/v1/workspaces/{workspace_id}/documents",
+            headers=auth_headers,
+            json={"owner_ref": "company", "type": doc_type, "file_url": f"http://x/{doc_type}.pdf"},
+        )
+
+    cl2 = client.get(
+        f"/api/v1/workspaces/{workspace_id}/intake-checklist", headers=auth_headers
+    ).json()
+    assert cl2["complete"] is True
+    assert all(i["uploaded"] for i in cl2["items"] if i["required"])
+
+
 def test_audit_records_facility_registration(client, auth_headers, workspace_id):
     fac = client.post(
         f"/api/v1/workspaces/{workspace_id}/facilities",

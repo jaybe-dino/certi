@@ -7,7 +7,7 @@ from app.api.deps import get_current_user, get_path_workspace
 from app.core.database import get_db
 from app.models.enums import DocumentType
 from app.models.organization import User, Workspace
-from app.schemas.document import DocumentCreate, DocumentRead
+from app.schemas.document import DocumentCreate, DocumentRead, IntakeChecklist
 from app.services import audit_service, document_service
 
 router = APIRouter(tags=["documents"])
@@ -41,6 +41,18 @@ async def create_document(
         payload={"owner_ref": document.owner_ref, "type": document.type.value},
     )
     return document
+
+
+@router.get(
+    "/workspaces/{workspace_id}/intake-checklist",
+    response_model=IntakeChecklist,
+    summary="접수 서류 체크리스트 (대행 모델)",
+)
+async def intake_checklist(
+    workspace: Workspace = Depends(get_path_workspace),
+    db: AsyncSession = Depends(get_db),
+):
+    return await document_service.intake_checklist(db, workspace.id)
 
 
 @router.get(

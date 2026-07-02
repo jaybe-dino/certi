@@ -140,6 +140,29 @@ async def add_ingredients_bulk(
     )
 
 
+@router.post(
+    "/products/{product_id}/ingredients/upload",
+    response_model=list[IngredientRead],
+    summary="전성분 영문 엑셀 업로드 → INCI 자동 매핑",
+)
+async def upload_ingredients_xlsx(
+    product_id: uuid.UUID,
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    product = await _require_product(db, product_id, current_user)
+    name = (file.filename or "").lower()
+    if not name.endswith((".xlsx", ".xlsm")):
+        raise HTTPException(status_code=400, detail=".xlsx 파일을 업로드하세요.")
+    raw_names = product_service.parse_ingredient_xlsx(await file.read())
+    if not raw_names:
+        raise HTTPException(status_code=422, detail="성분을 추출하지 못했습니다.")
+    return await product_service.add_ingredients_bulk(
+        db, product_id=product.id, raw_names=raw_names
+    )
+
+
 @router.get(
     "/products/{product_id}/ingredients",
     response_model=list[IngredientRead],

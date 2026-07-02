@@ -114,6 +114,55 @@ def test_link_rejects_foreign_facility(client, auth_headers, workspace_id):
     assert link.status_code == 400
 
 
+def test_ingredient_xlsx_upload(client, auth_headers, workspace_id):
+    from openpyxl import Workbook
+
+    pid = client.post(
+        f"/api/v1/workspaces/{workspace_id}/products",
+        headers=auth_headers,
+        json={"name": "Serum XLSX"},
+    ).json()["id"]
+
+    wb = Workbook()
+    ws = wb.active
+    ws.append(["Ingredient (INCI)", "wt%"])
+    ws.append(["정제수", "70"])
+    ws.append(["글리세린", "5"])
+    ws.append(["나이아신아마이드", "2"])
+    buf = io.BytesIO()
+    wb.save(buf)
+    buf.seek(0)
+
+    files = {
+        "file": (
+            "ingredients.xlsx",
+            buf,
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        )
+    }
+    resp = client.post(
+        f"/api/v1/products/{pid}/ingredients/upload", headers=auth_headers, files=files
+    )
+    assert resp.status_code == 200, resp.text
+    inci = {i["raw_name"]: i["inci_name"] for i in resp.json()}
+    assert inci["정제수"] == "Water"
+    assert inci["글리세린"] == "Glycerin"
+    assert inci["나이아신아마이드"] == "Niacinamide"
+
+
+def test_ingredient_upload_rejects_non_xlsx(client, auth_headers, workspace_id):
+    pid = client.post(
+        f"/api/v1/workspaces/{workspace_id}/products",
+        headers=auth_headers,
+        json={"name": "P"},
+    ).json()["id"]
+    files = {"file": ("data.csv", io.BytesIO(b"a,b"), "text/csv")}
+    resp = client.post(
+        f"/api/v1/products/{pid}/ingredients/upload", headers=auth_headers, files=files
+    )
+    assert resp.status_code == 400
+
+
 def test_bulk_csv_upload(client, auth_headers, workspace_id):
     csv_content = (
         "name,category,label_url,ingredients\n"

@@ -31,6 +31,9 @@ export default function Nav() {
           <Link href="/dashboard" className="text-slate-600 hover:text-brand-600">
             대시보드
           </Link>
+          <Link href="/intake" className="text-slate-600 hover:text-brand-600">
+            접수 서류
+          </Link>
           <Link href="/facilities" className="text-slate-600 hover:text-brand-600">
             시설
           </Link>

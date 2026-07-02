@@ -25,3 +25,16 @@ class DocumentRead(BaseModel):
     file_url: str
     version: int
     created_at: datetime
+
+
+class IntakeChecklistItem(BaseModel):
+    type: DocumentType
+    title: str
+    required: bool
+    uploaded: bool
+    latest_file_url: str | None = None
+
+
+class IntakeChecklist(BaseModel):
+    complete: bool  # all required company-level docs uploaded
+    items: list[IntakeChecklistItem]

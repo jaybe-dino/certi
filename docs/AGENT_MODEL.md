@@ -91,15 +91,16 @@
 | 마감·갱신 관리 | 컴플라이언스 캘린더(FR-09) | ✅ |
 | **FDA 직접 제출(ESG API)** | FR-08 | ⏸ 보류(대행이 수행) |
 
-### 갭 / 다음 후보 (미구현, 필요 시)
+### 갭 / 다음 후보
 
-1. **접수 서류 체크리스트 화면**: 위 서류 목록을 그대로 체크리스트로 만들어,
-   고객이 업로드→에이전시가 확인하는 인테이크 UI. (문서보관함 type 확장으로 구현 가능:
-   `biz_registration`, `factory_registration`, `business_card`, `product_brief` 추가)
-2. **전성분 영문 엑셀 업로드 → 파싱 → INCI 매핑**: 현재 CSV 일괄과 유사하게
-   품목별 전성분 엑셀을 받아 자동 매핑.
-3. **에이전시 제출 상태 수동 기록**: ESG 자동화 대신, 에이전시가 접수/완료 상태를
-   수동 업데이트(제출ID·등록번호 입력)하는 필드. (submission 모델 재사용)
+1. ✅ **접수 서류 체크리스트** (구현됨): 문서 type 확장(`biz_registration`,
+   `factory_registration`, `business_card`, `product_brief`, `ingredient_sheet`)
+   + `GET /workspaces/{id}/intake-checklist` + 프론트 `/intake` 화면.
+2. ✅ **전성분 영문 엑셀 업로드 → INCI 매핑** (구현됨):
+   `POST /products/{id}/ingredients/upload` (.xlsx 파싱 → INCI 자동 매핑),
+   제품 화면에 업로드 버튼.
+3. ⏳ **에이전시 제출 상태 수동 기록** (미구현): ESG 자동화 대신, 에이전시가
+   접수/완료 상태를 수동 업데이트(제출ID·등록번호 입력)하는 필드. (submission 모델 재사용)
 
 ---
 
