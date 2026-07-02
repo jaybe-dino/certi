@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { api, ApiError } from "@/lib/api";
+import { api, ApiError, API_BASE } from "@/lib/api";
 
 type ChecklistItem = {
   key: string;
@@ -70,7 +70,14 @@ export default function DiagnosticsPage() {
       });
       setResult(data);
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "요청 중 오류가 발생했습니다.");
+      // Show the real cause so misconfig (wrong API URL / CORS) is visible.
+      const detail =
+        err instanceof ApiError
+          ? `[${err.status}] ${typeof err.detail === "string" ? err.detail : err.message}`
+          : err instanceof Error
+            ? `${err.name}: ${err.message}`
+            : "알 수 없는 오류";
+      setError(`요청 실패 · 호출 주소: ${API_BASE} · ${detail}`);
     } finally {
       setLoading(false);
     }
@@ -139,7 +146,8 @@ export default function DiagnosticsPage() {
           >
             {loading ? "진단 중..." : "진단하기"}
           </button>
-          {error && <p className="text-sm text-red-600">{error}</p>}
+          {error && <p className="text-sm text-red-600 break-all">{error}</p>}
+          <p className="text-[11px] text-slate-400 break-all">API: {API_BASE}</p>
         </form>
       </section>
 
